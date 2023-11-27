@@ -1,6 +1,9 @@
 const path = require('path')
 const webpack = require('webpack'); 
 const childProcess = require('child_process');
+const HtmlWebpackPlugin = require('html-webpack-plugin')
+const { CleanWebpackPlugin } = require("clean-webpack-plugin")
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 module.exports = {
     mode : 'development', 
@@ -21,7 +24,9 @@ module.exports = {
                 test: /\.css$/,
                 use: [
                     // 여러개의 로더 설정 가능 (순서는 뒤에서 부터)
-                    'style-loader',
+                    process.env.NODE_ENV === 'production' 
+                      ? MiniCssExtractPlugin.loader // 프로덕션 환경 
+                      : 'style-loader', // 개발 환경
                     'css-loader'
                 ]
             },
@@ -54,19 +59,21 @@ module.exports = {
                 },
                 generator: {
                     filename: '[name][ext]?[hash][query]',
-                    publicPath: './dist/cnd-assets/',
+                    publicPath: './cnd-assets/',
                     outputPath: 'cnd-assets/',
                 }
             }
         ]
     },
     plugins: [
+        // 빌드 된 결과물에 정보, 커밋 버전과 같은 것들을 추가할 수 있음
         new webpack.BannerPlugin({
             banner: `
               Buiild Date: ${new Date().toLocaleString()}
               Author: ${childProcess.execSync('git config user.name')}
             `
         }),
+        // 개발환경, 운영환경에 맞게 나눠서 배포 가능, 전역 변수를 애플리케이션에 주입한다.
         new webpack.DefinePlugin({
             TWO: "1+1", 
             STR_TWO: JSON.stringify("1+1"),
@@ -74,6 +81,26 @@ module.exports = {
             PRODUCTION: JSON.stringify(false),
             MAX_COUNT: JSON.stringify(999),
             "api_domain": JSON.stringify("https://dev.api.domain.com")
-        })
+        }),
+        // HTML 후처리에 사용한다.
+        new HtmlWebpackPlugin({
+            template: "./src/index.html",
+            templateParameters: {
+                temp: "(test)",
+                env : process.env.NODE_ENV === 'development' ? '(개발용)' : '',
+            },
+            minify: process.env.NODE_ENV === 'production' ? {
+                collapseWhitespace: true,   // 빈칸 제거
+                removeComments: true,       // 주석 제거
+            } : false,
+            hash: true      // 정적 파일 부를 시 쿼리문자열에 웹팩 해쉬값 추가
+        }),
+        // 빌드 이전 결과물을 제거 후 빌드한다. (덮어쓰기가 되지 않는 결과물로 인한 문제 발생 해결)
+        new CleanWebpackPlugin(),
+        // CSS 파일을 JS 빌드파일에서 분리하여 별도의 CSS 빌드파일로 만듬 (로더도 추가 필요)
+        ...( process.env.NODE_ENV === 'production' 
+            ?
+            [new MiniCssExtractPlugin({ filename: `[name].css` })] 
+            : [] ),
     ],
 }
