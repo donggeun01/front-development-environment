@@ -8,7 +8,7 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 module.exports = {
     mode : 'development', 
     entry: {
-        main: './src/app.js',
+        main: './app.js',
         // testBuild: './src/app.js'
     },
     output: {
@@ -62,7 +62,12 @@ module.exports = {
                     publicPath: './cnd-assets/',
                     outputPath: 'cnd-assets/',
                 }
-            }
+            },
+            {
+                test: /\.js$/,
+                loader: 'babel-loader',
+                exclude: /node_modules/,
+            },
         ]
     },
     plugins: [

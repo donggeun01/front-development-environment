@@ -5,6 +5,8 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.innerHTML = `<img src=${ nyancat } />`
 })
 
+const alert = (msg) => alert(msg);
+
 
 console.log(process.env.NODE_ENV)
 console.log(TWO)            // 2;
