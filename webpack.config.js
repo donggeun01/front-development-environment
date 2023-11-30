@@ -1,4 +1,4 @@
-const path = require('path')
+const path = require('path');
 const webpack = require('webpack'); 
 const childProcess = require('child_process');
 const HtmlWebpackPlugin = require('html-webpack-plugin')
@@ -21,13 +21,14 @@ module.exports = {
     module: {
         rules: [
             {
-                test: /\.css$/,
+                test: /\.(css|scss)$/,
                 use: [
                     // 여러개의 로더 설정 가능 (순서는 뒤에서 부터)
                     process.env.NODE_ENV === 'production' 
                       ? MiniCssExtractPlugin.loader // 프로덕션 환경 
                       : 'style-loader', // 개발 환경
-                    'css-loader'
+                    'css-loader',
+                    'sass-loader'
                 ]
             },
             // {
