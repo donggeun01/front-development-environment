@@ -13,3 +13,6 @@ bower_components
 psd
 thumb
 sketch
+
+#webpack 빌드 파일
+dist

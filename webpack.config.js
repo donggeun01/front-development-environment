@@ -4,11 +4,12 @@ const childProcess = require('child_process');
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const { CleanWebpackPlugin } = require("clean-webpack-plugin")
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const apiMocker = require("connect-api-mocker");
 
 module.exports = {
     mode : 'development',  
     entry: {
-        main: './app.js',
+        main: './src/app.js',
         // testBuild: './src/app.js'
     },
     output: {
@@ -16,6 +17,17 @@ module.exports = {
         filename: '[name].js',
         assetModuleFilename: 'images/[hash][ext][query]'    // 출력 파일 이름을 변경함 (default: [hash][ext][query])
         // publicPath: './dist/'                            // 요청 시 앞에 붙힐 경로명
+    },
+    devServer: {
+        // proxy: {
+        //     "/api": "http://localhost:8081"
+        // },
+        client: {
+            overlay: true,
+        },
+        onBeforeSetupMiddleware: function(devServer) {
+            devServer.app.use(apiMocker("/api", "mocks/api"))
+        }
     },
     // loader - module.rules에 추가
     module: {
