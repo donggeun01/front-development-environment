@@ -5,9 +5,14 @@ const HtmlWebpackPlugin = require('html-webpack-plugin')
 const { CleanWebpackPlugin } = require("clean-webpack-plugin")
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const apiMocker = require("connect-api-mocker");
+const CssMinimizerWebpackPlugin = require("css-minimizer-webpack-plugin")
+const TerserPlugin = require("terser-webpack-plugin");
+const CopyPlugin = require("copy-webpack-plugin");
+
+const mode = process.env.NODE_ENV || "development"
 
 module.exports = {
-    mode : 'development',  
+    mode : mode,
     entry: {
         main: './src/app.js',
         // testBuild: './src/app.js'
@@ -18,6 +23,23 @@ module.exports = {
         assetModuleFilename: 'images/[hash][ext][query]'    // 출력 파일 이름을 변경함 (default: [hash][ext][query])
         // publicPath: './dist/'                            // 요청 시 앞에 붙힐 경로명
     },
+    optimization: {
+        minimizer: mode === "production" ? [
+            // css 파일 최적화 압축
+            new CssMinimizerWebpackPlugin(),
+            new TerserPlugin({
+                terserOptions: {
+                    compress: {
+                        drop_console: true  // console.log 제거
+                    }
+                }
+            }),
+        ] : [],
+        // 결과물들의 중복 제거
+        splitChunks: {
+            chunks: "all"
+        }
+    },
     devServer: {
         // proxy: {
         //     "/api": "http://localhost:8081"
@@ -27,7 +49,8 @@ module.exports = {
         },
         onBeforeSetupMiddleware: function(devServer) {
             devServer.app.use(apiMocker("/api", "mocks/api"))
-        }
+        },
+        hot: true,
     },
     // loader - module.rules에 추가
     module: {
@@ -120,5 +143,16 @@ module.exports = {
             ?
             [new MiniCssExtractPlugin({ filename: `[name].css` })] 
             : [] ),
+        new CopyPlugin({
+            patterns: [
+                {
+                    from: "./node_modules/axios/dist/axios.min.js",
+                    to: "./axios.min.js"
+                }
+            ]
+        })
     ],
+    externals: {
+        axios: "axios"
+    }
 }
